@@ -33,6 +33,7 @@ public class ChatClient {
 	private BufferedReader bufferIn;
 
 	private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
+	private ArrayList<MessageListener> messageListener = new ArrayList<>();
     
     
     public static void main(String[] args) throws IOException {
@@ -52,6 +53,13 @@ public class ChatClient {
 
 			}
 		});
+        client.addMessageListener(new MessageListener() {
+			
+			@Override
+			public void onMessgae(String fromLogin, String msgContent) {
+				System.out.println("You got messgae from " + fromLogin + " :" + msgContent);
+			}
+		});
         if (!client.connect()) {
 			System.out.println("conection failed.");
 		}else {
@@ -59,24 +67,32 @@ public class ChatClient {
 		}
         if(client.login("a","a")) {
         	System.out.println("logged in sucessful");
+        	client.msg("d", "bruh");
+        	
         }else {
         	System.out.println("login failed");
         }
-        client.logoff();    }
+        //client.logoff();    
+        }
     
-    private void logoff() throws IOException {
+    public void msg(String sendTo, String msgContent) throws IOException {
+    	String cmd = "msg " + sendTo + " " + msgContent + "\n";
+		serverOut.write(cmd.getBytes());
+	}
+
+    public void logoff() throws IOException {
 		// TODO Auto-generated method stub
 		String cmd = "quit\n";
 		System.out.println(cmd);
 		serverOut.write(cmd.getBytes());
 	}
 
-	private boolean login(String login, String password) throws IOException {
+	public boolean login(String login, String password) throws IOException {
 		String cmd = "login "+ login + " " + password + "\n";
 		System.out.println(cmd);
 		serverOut.write(cmd.getBytes());
 		String respond =  bufferIn.readLine();
-		System.out.println("respond is "+respond);
+		//System.out.println("respond is "+respond);
 		if ("loged in".equalsIgnoreCase(respond)) {
 			startMessageReader();
 			return true;
@@ -88,7 +104,7 @@ public class ChatClient {
 
 	private void startMessageReader() {
 		// TODO Auto-generated method stub
-		System.out.println("starting msgReader");
+		//System.out.println("starting msgReader");
 		Thread t = new Thread() {
 			public void run() {
 				readMessageLoop();
@@ -99,11 +115,11 @@ public class ChatClient {
 
 	private void readMessageLoop() {
 		// TODO Auto-generated method stub
-		System.out.println("starting msgloop");
+		//System.out.println("starting msgloop");
 		try {
 			String line;
 			while ((line=bufferIn.readLine()) != null) {
-				System.out.println("linerecored: "+line);
+				//System.out.println("linerecored: "+line);
 				String[] tokens = StringUtils.split(line);
 	            if (tokens != null && tokens.length > 0) {
 	                String cmd = tokens[0];
@@ -111,6 +127,9 @@ public class ChatClient {
 						handleOnline(tokens);
 					}else if ("offline".equalsIgnoreCase(cmd)) {
 						handleOffline(tokens);
+					}else if ("msg".equalsIgnoreCase(cmd)) {
+	                    String[] msgtokens = StringUtils.split(line, null, 3);
+						handleMessage(msgtokens);
 					}
 	            }
 			}
@@ -125,6 +144,15 @@ public class ChatClient {
 				e.printStackTrace();
 			}
 			
+		}
+	}
+
+	private void handleMessage(String[] tokens) {
+		// TODO Auto-generated method stub
+		String login = tokens[1];
+		String message = tokens[2];
+		for (MessageListener listener: messageListener) {
+			listener.onMessgae(login, message);
 		}
 	}
 
@@ -149,7 +177,7 @@ public class ChatClient {
         this.serverPort = serverPort;
     }
 
-    private boolean connect() {
+	public boolean connect() {
         try {
             this.socket = new Socket(serverName, serverPort);
             this.serverOut = socket.getOutputStream();
@@ -168,6 +196,12 @@ public class ChatClient {
     }
     public void removeUserStatusListener (UserStatusListener listener) {
     	userStatusListeners.remove(listener);
+    }
+    public void addMessageListener (MessageListener listener) {
+    	messageListener.add(listener);
+    }
+    public void removeMessageListener(MessageListener listener) {
+    	messageListener.remove(listener);
     }
 
 }

@@ -90,12 +90,12 @@ public class ServerWorker extends Thread {
         for (ServerWorker worker : workerList) {
             if (isTopic) { //send to a group
                 if (worker.isMemberOfTopic(sendTo)) {
-                    String sentmsg = "msg " + sendTo + " " + login + ":" + textmsg + "\n";
+                    String sentmsg = "msg " + sendTo + " " + login + " " + textmsg + "\n";
                     worker.send(sentmsg);
                 }
             } else {  //direct message
                 if (sendTo.equalsIgnoreCase(worker.getLogin())) {
-                    String sentmsg = "msg " + login + ":" + textmsg + "\n";
+                    String sentmsg = "msg " + login + " " + textmsg + "\n";
                     worker.send(sentmsg);
                 }
             }
