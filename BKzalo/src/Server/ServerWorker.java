@@ -130,7 +130,7 @@ public class ServerWorker extends Thread {
                 for (ServerWorker worker : workerList) {		//login thanh cong thi gui danh sach user dang online
                     if (worker.getLogin() != null) {
                         if (!login.equals(worker.getLogin())) {
-                            String msg2 = worker.getLogin() + " is online" + "\n \n";
+                            String msg2 = "online " + worker.getLogin() + "\n \n";
                             send(msg2);
                         }
                     }
